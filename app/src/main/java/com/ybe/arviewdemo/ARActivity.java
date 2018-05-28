@@ -28,7 +28,7 @@ public class ARActivity extends AppCompatActivity {
         arView.setArguments(bundle);
 
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.replace(R.id.layout_ar_container, arView);
+        ft.add(R.id.layout_ar_container, arView);
         ft.commit();
 
     }

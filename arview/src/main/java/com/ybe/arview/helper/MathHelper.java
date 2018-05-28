@@ -55,13 +55,13 @@ public class MathHelper {
             angle += 360;
         }
 
-        angle = 360 - (angle + 90);
+        angle = 360 - angle;
 
         return angle;
     }
 
-    public Pose getSignAngle() {
-        float angleRad = (float) Math.toRadians(getBearing());
+    public Pose getSignAnglePose() {
+        float angleRad = (float) Math.toRadians(getAngle());
         float sinHalf = (float) Math.sin(angleRad / 2);
         float cosHalf = (float) Math.cos(angleRad / 2);
         return Pose.makeRotation(0, sinHalf, 0, cosHalf);

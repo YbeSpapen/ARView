@@ -19,7 +19,12 @@
         <activity
             android:name=".ARActivity"
             android:label="@string/title_activity_ar"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
+
+        <meta-data
+            android:name="com.google.ar.core"
+            android:value="optional" />
+
     </application>
 
 </manifest>

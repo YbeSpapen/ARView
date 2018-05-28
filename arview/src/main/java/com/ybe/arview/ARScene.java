@@ -36,14 +36,14 @@ public class ARScene {
     private List<Pose> poses = new ArrayList<>();
 
 
-    private final ObjectRenderer compassNeedle = new ObjectRenderer();
+    private final ObjectRenderer arrow = new ObjectRenderer();
     private final ObjectRenderer flag = new ObjectRenderer();
     private final ObjectRenderer sign = new ObjectRenderer();
 
-    private final Pose cameraRelativeCompassPose = Pose.makeTranslation(0, -0.07f, -0.2f);
+    private final Pose cameraRelativeArrowPose = Pose.makeTranslation(0, -0.07f, -0.2f);
 
     @RequiresApi(api = Build.VERSION_CODES.M)
-    public ARScene(Context mContext, Location location, int amountOfObjects ) {
+    public ARScene(Context mContext, Location location, int amountOfObjects) {
         this.mContext = mContext;
 
         this.location = location;
@@ -53,7 +53,7 @@ public class ARScene {
         this.helper = new MathHelper(mContext, location);
     }
 
-    public void draw(Frame frame, boolean drawSign, boolean drawCompass) {
+    public void draw(Frame frame, boolean drawSign, boolean drawArrow) {
         Camera camera = frame.getCamera();
 
         float[] projmtx = new float[16];
@@ -63,7 +63,10 @@ public class ARScene {
         float[] viewmtx = new float[16];
         camera.getViewMatrix(viewmtx, 0);
 
-        final float lightIntensity = frame.getLightEstimate().getPixelIntensity();
+        // Compute lighting from average intensity of the image.
+        final float[] colorCorrectionRgba = new float[4];
+        frame.getLightEstimate().getColorCorrection(colorCorrectionRgba, 0);
+
 
         if (drawSign) {
             for (Anchor anchor : anchors) {
@@ -77,26 +80,26 @@ public class ARScene {
                     finalPose.toMatrix(anchorMatrix, 0);
 
                     sign.updateModelMatrix(anchorMatrix, 0.5f);
-                    sign.draw(viewmtx, projmtx, lightIntensity);
+                    sign.draw(viewmtx, projmtx, colorCorrectionRgba);
                 } else {
                     anchor.getPose().toMatrix(anchorMatrix, 0);
 
                     flag.updateModelMatrix(anchorMatrix, 0.05f);
-                    flag.draw(viewmtx, projmtx, lightIntensity);
+                    flag.draw(viewmtx, projmtx, colorCorrectionRgba);
                 }
             }
         }
 
-        if (drawCompass) {
-            Pose compassBase = camera.getPose().compose(cameraRelativeCompassPose).extractTranslation();
-            Pose needleRotation = compassBase.compose(camera.getDisplayOrientedPose().extractRotation()).extractRotation();
-            Pose finalPose = compassBase.compose(needleRotation);
+        if (drawArrow) {
+            Pose arrowBase = camera.getPose().compose(cameraRelativeArrowPose).extractTranslation();
+            Pose arrowRotation = arrowBase.compose(camera.getDisplayOrientedPose().extractRotation()).extractRotation();
+            Pose finalPose = arrowBase.compose(arrowRotation);
 
             finalPose.toMatrix(needleMatrix, 0);
             Matrix.rotateM(needleMatrix, 0, helper.getAngle(), 0f, 1f, 0f);
 
-            compassNeedle.updateModelMatrix(needleMatrix, .003f);
-            compassNeedle.draw(viewmtx, projmtx, lightIntensity);
+            arrow.updateModelMatrix(needleMatrix, 0.03f);
+            arrow.draw(viewmtx, projmtx, colorCorrectionRgba);
         }
     }
 
@@ -108,8 +111,8 @@ public class ARScene {
             flag.createOnGlThread( /*context=*/ mContext, flagObjFile, flagTexture);
             flag.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
 
-            compassNeedle.createOnGlThread( /*context=*/ mContext, "compass_needle.obj", "compass_needle.png");
-            compassNeedle.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
+            arrow.createOnGlThread( /*context=*/ mContext, "models/arrow.obj", "models/arrow.png");
+            arrow.setMaterialProperties(0.0f, 3.5f, 1.0f, 6.0f);
         } catch (IOException e) {
             Log.e(TAG, "Failed to read obj file");
         }
@@ -121,7 +124,7 @@ public class ARScene {
         }
 
         anchors.add(anchor);
-        poses.add(helper.getSignAngle());
+        poses.add(helper.getSignAnglePose());
 
     }
 
