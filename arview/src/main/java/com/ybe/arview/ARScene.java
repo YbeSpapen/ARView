@@ -27,14 +27,11 @@ public class ARScene {
 
     private int amountOfObjects;
 
-    public Location location;
-
     private final float[] anchorMatrix = new float[16];
     private final float[] needleMatrix = new float[16];
 
     private final ArrayList<Anchor> anchors = new ArrayList<>();
     private List<Pose> poses = new ArrayList<>();
-
 
     private final ObjectRenderer arrow = new ObjectRenderer();
     private final ObjectRenderer flag = new ObjectRenderer();
@@ -45,11 +42,7 @@ public class ARScene {
     @RequiresApi(api = Build.VERSION_CODES.M)
     public ARScene(Context mContext, Location location, int amountOfObjects) {
         this.mContext = mContext;
-
-        this.location = location;
-
         this.amountOfObjects = amountOfObjects;
-
         this.helper = new MathHelper(mContext, location);
     }
 
@@ -63,10 +56,8 @@ public class ARScene {
         float[] viewmtx = new float[16];
         camera.getViewMatrix(viewmtx, 0);
 
-        // Compute lighting from average intensity of the image.
         final float[] colorCorrectionRgba = new float[4];
         frame.getLightEstimate().getColorCorrection(colorCorrectionRgba, 0);
-
 
         if (drawSign) {
             for (Anchor anchor : anchors) {
@@ -128,7 +119,7 @@ public class ARScene {
 
     }
 
-    public void removeAnchor() {
+    private void removeAnchor() {
         anchors.get(0).detach();
         anchors.remove(0);
         poses.remove(0);

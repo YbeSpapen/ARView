@@ -1,1 +1,1 @@
-include ':app', ':arview'
+include ':app', ':arview', ':mylibrary'

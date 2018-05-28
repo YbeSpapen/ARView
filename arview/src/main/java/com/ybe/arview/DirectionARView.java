@@ -16,11 +16,13 @@
 
 package com.ybe.arview;
 
+import android.annotation.SuppressLint;
 import android.location.Location;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -57,6 +59,7 @@ import com.ybe.arview.render.PlaneRenderer;
 import com.ybe.arview.render.PointCloudRenderer;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -65,35 +68,31 @@ public class DirectionARView extends Fragment implements GLSurfaceView.Renderer 
     private String TAG = "DirectionARView";
 
     private final BackgroundRenderer backgroundRenderer = new BackgroundRenderer();
-
     private final PlaneRenderer planeRenderer = new PlaneRenderer();
-    private final PointCloudRenderer pointCloud = new PointCloudRenderer();
-
+    private SnackbarHelper messageSnackbarHelper = new SnackbarHelper();
+    private PointCloudRenderer pointCloudRenderer = new PointCloudRenderer();
+    private TapHelper tapHelper;
+    private DisplayRotationHelper displayRotationHelper;
 
     private GLSurfaceView surfaceView;
     private boolean installRequested;
     private Session session;
-    private DisplayRotationHelper displayRotationHelper;
-    private Location destination;
 
     private ARScene scene;
 
-    private int amountOfObjects;
     private String signObjFile;
     private String signTextureFile;
     private String flagObjFile;
     private String flagTextureFile;
-    private TapHelper tapHelper;
-    private SnackbarHelper messageSnackbarHelper = new SnackbarHelper();
-    private PointCloudRenderer pointCloudRenderer = new PointCloudRenderer();
 
+    @SuppressLint("ClickableViewAccessibility")
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.arscene, container, false);
 
         surfaceView = view.findViewById(R.id.surfaceview);
-        displayRotationHelper = new DisplayRotationHelper(getContext());
+        displayRotationHelper = new DisplayRotationHelper(Objects.requireNonNull(getContext()));
 
         tapHelper = new TapHelper(getContext());
         surfaceView.setOnTouchListener(tapHelper);
@@ -116,13 +115,13 @@ public class DirectionARView extends Fragment implements GLSurfaceView.Renderer 
 
         Bundle args = getArguments();
         if (args != null) {
-            destination = (Location) args.getParcelable("location");
-            amountOfObjects = args.getInt("amountOfObjects");
+            Location destination = args.getParcelable("location");
             signObjFile = args.getString("signObjFile");
             signTextureFile = args.getString("signTextureFile");
             flagObjFile = args.getString("flagObjFile");
             flagTextureFile = args.getString("flagTextureFile");
 
+            int amountOfObjects = args.getInt("amountOfObjects");
             scene = new ARScene(getActivity(), destination, amountOfObjects);
             scene.resume();
         }
@@ -154,7 +153,7 @@ public class DirectionARView extends Fragment implements GLSurfaceView.Renderer 
                     return;
                 }
 
-                session = new Session(getActivity());
+                session = new Session(Objects.requireNonNull(getActivity()));
 
             } catch (UnavailableArcoreNotInstalledException |
                     UnavailableUserDeclinedInstallationException e) {
@@ -212,13 +211,13 @@ public class DirectionARView extends Fragment implements GLSurfaceView.Renderer 
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] results) {
         if (!CameraPermissionHelper.hasCameraPermission(getActivity())) {
             Toast.makeText(getActivity(), "Camera permission is needed to run this application", Toast.LENGTH_LONG)
                     .show();
             if (!CameraPermissionHelper.shouldShowRequestPermissionRationale(getActivity())) {
                 // Permission denied with checking "Do not ask again".
-                CameraPermissionHelper.launchPermissionSettings(getActivity());
+                CameraPermissionHelper.launchPermissionSettings(Objects.requireNonNull(getActivity()));
             }
             getActivity().finish();
         }
@@ -310,7 +309,7 @@ public class DirectionARView extends Fragment implements GLSurfaceView.Renderer 
                 for (Plane plane : session.getAllTrackables(Plane.class)) {
                     if (plane.getType() == Plane.Type.HORIZONTAL_UPWARD_FACING &&
                             plane.getTrackingState() == TrackingState.TRACKING) {
-                        messageSnackbarHelper.hide(getActivity());
+                        messageSnackbarHelper.hide(Objects.requireNonNull(getActivity()));
                         break;
                     }
                 }
